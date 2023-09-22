@@ -20,7 +20,7 @@ cmake ..
 make -j 65535  
 
 ### Step 3: Call opt to enable our PDG-Pass to analysis LLVM IR and construct the Control Dependence Graph  
-opt --enable-new-pm --load-pass-plugin /your\_path\_to\_PDG\_demo/build/HaltAnalyzer.so --passes="halt-analyzer" --disable-output /your\_path\_to\_PDG\_demo/demo/test\_opt\_with\_header.ll  
+opt --enable-new-pm --load-pass-plugin /your\_path\_to\_PDG\_demo/build/PDGAnalyzer.so --passes="pdg-analyzer" --disable-output /your\_path\_to\_PDG\_demo/demo/test\_opt\_with\_header.ll  
 
 ## Acknownledgement  
 Thanks for the help of https://github.com/PacktPublishing/LLVM-Techniques-Tips-and-Best-Practices-Clang-and-Middle-End-Libraries/tree/main/Chapter09 to let me get started in writing the LLVM Pass from ZERO!  
