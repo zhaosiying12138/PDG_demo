@@ -61,18 +61,13 @@ PDGAnalyzer::run(Function &F, FunctionAnalysisManager &FAM) {
       llvm::outs() << "\t";
 
       llvm::outs() << "[";
-      bool whereL = PDT.dominates(BB->getTerminator(), BB_succ->getTerminator());
-      DomTreeNode *dtnode_L = PDT.getNode(BB);
-      if (!whereL) {
-        dtnode_L = dtnode_L->getIDom();
-      }
-      assert(PDT.dominates(dtnode_L->getBlock(), BB_succ));
 
+      DomTreeNode *dtnode_end = PDT.getNode(BB)->getIDom();
       DomTreeNode *dtnode_iterator_BB_succ = PDT.getNode(BB_succ);
-      while (dtnode_iterator_BB_succ != dtnode_L) {
+      while (dtnode_iterator_BB_succ != dtnode_end) {
         llvm::outs() << dtnode_iterator_BB_succ->getBlock()->getName();
         dtnode_iterator_BB_succ = dtnode_iterator_BB_succ->getIDom();
-        if (dtnode_iterator_BB_succ != dtnode_L) {
+        if (dtnode_iterator_BB_succ != dtnode_end) {
           llvm::outs() << ", ";
         }
       }

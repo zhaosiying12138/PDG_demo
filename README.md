@@ -12,6 +12,7 @@ clang -Xclang -disable-O0-optnone -S -O0 -emit-llvm test.c -o test\_tmp.ll
 opt -S -simplifycfg test\_tmp.ll -o test\_opt.ll  
 opt -dot-cfg test\_opt.ll > /dev/null  
 dot -T png -o test\_opt\_cfg.png .zsy\_test.dot  
+sxiv test\_opt\_cfg.png  
 
 ### Step 2: Build Pass  
 mkdir build  
