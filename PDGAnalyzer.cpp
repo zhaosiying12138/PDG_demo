@@ -44,9 +44,67 @@ class PDGAnalyzer : public PassInfoMixin<PDGAnalyzer> {
   std::vector<RegionNode *> region_record;
   std::map<BasicBlock *, RegionNode *> map_bb_region;
 
-  void zsy_dump_region_node_data(std::list<CDGNode> data);
+  void zsy_dump_region_node_data(std::list<CDGNode> data)
+  {
+    for (CDGNode cdg_node : data) {
+      if (cdg_node.type == 0) {
+        llvm::outs() << cdg_node.BB->getName() << "-";
+        if (cdg_node.condition)
+          llvm::outs() << "T";
+        else
+          llvm::outs() << "F";
+        llvm::outs() << ", ";
+      }
+    }
+    llvm::outs() << "\n";
+  }
+
+  int cdg_region_node_basic_block_size(RegionNode *rn)
+  {
+    int cnt = 0;
+    for (CDGNode cdg_node : rn->data) {
+      if (cdg_node.type == 0)
+        cnt++;
+    }
+    return cnt;
+  }
+
+  bool cdg_is_region_node_contains_data(RegionNode *rn, std::list<CDGNode> data)
+  {
+    for (auto it1 = data.begin(); it1 != data.end(); it1++) {
+      CDGNode cdg_node1 = *it1;
+      bool immediate_ret = false;
+      for (auto it2 = rn->data.begin(); it2 != rn->data.end(); it2++) {
+        CDGNode cdg_node2 = *it2;
+        if (cdg_node1.type == cdg_node2.type && cdg_node1.BB == cdg_node2.BB
+          && cdg_node1.condition == cdg_node2.condition) {
+            immediate_ret = true;
+            break;
+        }
+      }
+      if(!immediate_ret)
+        return false;
+    }
+    return true;
+  }
+
   RegionNode *cdg_is_equal_region_node(std::list<CDGNode> data)
   {
+    // llvm::outs() << "[ZSY_DBG] cdg_is_equal_region_node: ";
+    // zsy_dump_region_node_data(data);
+    for (int i = 0; i < region_record.size(); i++) {
+      RegionNode *rn = region_record.at(i);
+      // llvm::outs() << "[ZSY_DBGG] to be test from: \n";
+      // zsy_dump_region_node(rn);
+      int bb_cnt = cdg_region_node_basic_block_size(rn);
+      if (bb_cnt != data.size()) {
+        continue;
+      }
+
+      if (cdg_is_region_node_contains_data(rn, data)) {        
+        return rn;
+      }
+    }
     return NULL;
   }
 
@@ -85,21 +143,6 @@ public:
   PreservedAnalyses run(Function &F, FunctionAnalysisManager &FAM);
 };
 } // end anonymous namespace
-
-void PDGAnalyzer::zsy_dump_region_node_data(std::list<CDGNode> data)
-{
-  for (CDGNode cdg_node : data) {
-    if (cdg_node.type == 0) {
-      llvm::outs() << cdg_node.BB->getName() << "-";
-      if (cdg_node.condition)
-        llvm::outs() << "T";
-      else
-        llvm::outs() << "F";
-      llvm::outs() << ", ";
-    }
-  }
-  llvm::outs() << "\n";
-}
 
 PreservedAnalyses
 PDGAnalyzer::run(Function &F, FunctionAnalysisManager &FAM) {
@@ -205,8 +248,8 @@ PDGAnalyzer::run(Function &F, FunctionAnalysisManager &FAM) {
       RegionNode *cdg_reuse_region = cdg_is_equal_region_node(tmp_cdg_region_data);
       if (cdg_reuse_region == NULL) {
         cdg_reuse_region = cdg_alloc_region_node(tmp_cdg_region_data);
-        map_bb_region.emplace(BB, cdg_reuse_region);
       }
+      map_bb_region.emplace(BB, cdg_reuse_region);
       
     }
   }
