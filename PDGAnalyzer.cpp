@@ -34,6 +34,11 @@ class PDGAnalyzer : public PassInfoMixin<PDGAnalyzer> {
     bool condition;
     //type = 1 means RegionNode
     RegionNode *RN;
+
+    bool operator ==(const CDGNode &other)
+    {
+      return (type == other.type) && (BB == other.BB) && (condition == other.condition) && (type == 0);
+    }
   };
   struct RegionNode {
     int id;
@@ -54,6 +59,8 @@ class PDGAnalyzer : public PassInfoMixin<PDGAnalyzer> {
         else
           llvm::outs() << "F";
         llvm::outs() << ", ";
+      } else {
+        llvm::outs() << "R" << cdg_node.RN->id << ", ";
       }
     }
     llvm::outs() << "\n";
@@ -108,13 +115,40 @@ class PDGAnalyzer : public PassInfoMixin<PDGAnalyzer> {
     return NULL;
   }
 
+  RegionNode *cdg_is_subset_region_node(std::list<CDGNode> data)
+  {
+    for (int i = 0; i < region_record.size(); i++) {
+      RegionNode *rn = region_record.at(i);
+      if (cdg_is_region_node_contains_data(rn, data)) {        
+        return rn;
+      }
+    }
+    return NULL;
+  }
+
   RegionNode *cdg_alloc_region_node(std::list<CDGNode> data)
   {
     RegionNode *new_region_node = new RegionNode();
     new_region_node->id = total_region_node_id++;
     new_region_node->data = data;
-    region_record.push_back(new_region_node);
     return new_region_node;
+  }
+
+  void cdg_remove_containing_region_from_select_data(RegionNode *containing_rn, std::list<CDGNode> data)
+  {
+    for (CDGNode cdg_remove_node : data) {
+      containing_rn->data.remove(cdg_remove_node);
+    }
+  }
+
+  void cdg_replace_containing_region_with_contained(RegionNode *containing_rn, RegionNode *contained_rn)
+  {
+    cdg_remove_containing_region_from_select_data(containing_rn, contained_rn->data);
+
+    CDGNode new_cdg_node;
+    new_cdg_node.type = 1;
+    new_cdg_node.RN = contained_rn;
+    containing_rn->data.push_back(new_cdg_node);
   }
 
   void zsy_dump_region_node(RegionNode *region_node)
@@ -248,6 +282,11 @@ PDGAnalyzer::run(Function &F, FunctionAnalysisManager &FAM) {
       RegionNode *cdg_reuse_region = cdg_is_equal_region_node(tmp_cdg_region_data);
       if (cdg_reuse_region == NULL) {
         cdg_reuse_region = cdg_alloc_region_node(tmp_cdg_region_data);
+        RegionNode *cdg_containing_region = cdg_is_subset_region_node(tmp_cdg_region_data);
+        if (cdg_containing_region != NULL) {
+          cdg_replace_containing_region_with_contained(cdg_containing_region, cdg_reuse_region);
+        }
+        region_record.push_back(cdg_reuse_region);
       }
       map_bb_region.emplace(BB, cdg_reuse_region);
       
@@ -256,6 +295,7 @@ PDGAnalyzer::run(Function &F, FunctionAnalysisManager &FAM) {
   zsy_dump_map_bb_region();
   llvm::outs() << "\n";
   zsy_dump_region_record();
+
 
 
 
