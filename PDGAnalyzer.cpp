@@ -103,7 +103,8 @@ class PDGAnalyzer : public PassInfoMixin<PDGAnalyzer> {
       RegionNode *rn = region_record.at(i);
       // llvm::outs() << "[ZSY_DBGG] to be test from: \n";
       // zsy_dump_region_node(rn);
-      int bb_cnt = cdg_region_node_basic_block_size(rn);
+      // int bb_cnt = cdg_region_node_basic_block_size(rn); //SIYING_DEBUG: BUGGY!!
+      int bb_cnt = rn->data.size();
       if (bb_cnt != data.size()) {
         continue;
       }
@@ -149,6 +150,33 @@ class PDGAnalyzer : public PassInfoMixin<PDGAnalyzer> {
     new_cdg_node.type = 1;
     new_cdg_node.RN = contained_rn;
     containing_rn->data.push_back(new_cdg_node);
+  }
+
+  std::list<CDGNode> cdg_find_intersect_data_of_region_nodes(RegionNode *rn1, RegionNode *rn2)
+  {
+    std::list<CDGNode> res;
+    for (CDGNode cdg_node1 : rn1->data) {
+      for (CDGNode cdg_node2 : rn2->data) {
+        if (cdg_node1.type == cdg_node2.type && cdg_node1.BB == cdg_node2.BB &&
+          cdg_node1.condition == cdg_node2.condition && cdg_node1.type == 0) {
+            res.push_back(cdg_node1);
+          }
+      }
+    }
+    return res;
+  }
+
+  void cdg_split_intersect_data_from_region_node(RegionNode *rn)
+  {
+    for (RegionNode *rn_record : region_record) {
+      std::list<CDGNode> intersect_data = cdg_find_intersect_data_of_region_nodes(rn, rn_record);
+      if (intersect_data.size() != 0) {
+        RegionNode *new_intersect_region = cdg_alloc_region_node(intersect_data);
+        region_record.push_back(new_intersect_region);
+        cdg_replace_containing_region_with_contained(rn, new_intersect_region);
+        cdg_replace_containing_region_with_contained(rn_record, new_intersect_region);
+      }
+    }
   }
 
   void zsy_dump_region_node(RegionNode *region_node)
@@ -286,6 +314,7 @@ PDGAnalyzer::run(Function &F, FunctionAnalysisManager &FAM) {
         if (cdg_containing_region != NULL) {
           cdg_replace_containing_region_with_contained(cdg_containing_region, cdg_reuse_region);
         }
+        cdg_split_intersect_data_from_region_node(cdg_reuse_region);
         region_record.push_back(cdg_reuse_region);
       }
       map_bb_region.emplace(BB, cdg_reuse_region);
