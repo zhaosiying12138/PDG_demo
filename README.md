@@ -26,7 +26,7 @@ opt --enable-new-pm --load-pass-plugin /your\_path\_to\_PDG\_demo/build/PDGAnaly
 dot -T png -o /your\_path\_to\_PDG\_demo/demo/zsy\_test\_cdg\_auto\_generated.png zsy\_test\_cdg\_auto\_generated.dot  
 sxiv zsy\_test\_cdg\_auto\_generated.png  
   
-![Control Dependence Graph Demo](./demo/zsy_test_cdg_demo.png)
+![Control Dependence Graph Demo](./demo/zsy_test_cdg_demo.png)  
 Link: [《零基础入门控制依赖图构建的理论与实践》](https://zhuanlan.zhihu.com/p/658705992)  
 
 ## Acknownledgement  
