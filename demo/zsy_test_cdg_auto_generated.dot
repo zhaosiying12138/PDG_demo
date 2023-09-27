@@ -8,9 +8,8 @@ digraph G {
 	L2 [label="L2", shape=circle];
 	L3 [label="L3", shape=circle];
 	L1 [label="L1", shape=circle];
-	ENTRY [label="ENTRY", shape=circle];
 
-	R1 [label="R1", shape=doublecircle];
+	R1 [label="ENTRY", shape=circle];
 	R2 [label="R2", shape=doublecircle];
 	R3 [label="R3", shape=doublecircle];
 	R5 [label="R5", shape=doublecircle];
@@ -26,7 +25,6 @@ digraph G {
 	R1 -> L7;
 	R2 -> L6;
 
-	ENTRY -> R1 [label="T"];
 	R5 -> R2;
 	R6 -> R2;
 	L2 -> R3 [label="T"];

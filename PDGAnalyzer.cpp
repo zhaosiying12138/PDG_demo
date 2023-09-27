@@ -127,6 +127,17 @@ class PDGAnalyzer : public PassInfoMixin<PDGAnalyzer> {
     return NULL;
   }
 
+  bool cdg_is_region_ENTRY(RegionNode *rn)
+  {
+    auto rn_data = rn->data;
+    if (rn_data.size() == 1) {
+      CDGNode cdg_node = *(rn_data.begin());
+      if (cdg_node.BB->getName() == "ENTRY" && cdg_node.condition)
+        return true;
+    }
+    return false;
+  }
+
   RegionNode *cdg_alloc_region_node(std::list<CDGNode> data)
   {
     RegionNode *new_region_node = new RegionNode();
@@ -326,9 +337,6 @@ PDGAnalyzer::run(Function &F, FunctionAnalysisManager &FAM) {
   zsy_dump_region_record();
 
 
-
-
-
   std::error_code ec;
   llvm::raw_fd_ostream cdg_outs("../demo/zsy_test_cdg_auto_generated.dot", ec);
   cdg_outs << "digraph G {\n";
@@ -339,14 +347,18 @@ PDGAnalyzer::run(Function &F, FunctionAnalysisManager &FAM) {
                                IE = po_end(&F.getEntryBlock());
                                I != IE; ++I) {
     BasicBlock *BB = *I;
-    if (BB->getName() != "START" && BB->getName() != "STOP") {
+    if (BB->getName() != "START" && BB->getName() != "STOP" && BB->getName() != "ENTRY") {
       cdg_outs << "\t" << BB->getName() << " [label=\"" << BB->getName() << "\", shape=circle];\n";
     }
   }
 
   cdg_outs << "\n";
   for (RegionNode *tmp_rn : region_record) {
+    if (cdg_is_region_ENTRY(tmp_rn)) {
+      cdg_outs << "\tR" << tmp_rn->id << " [label=\"ENTRY\", shape=circle];\n";
+    } else {
       cdg_outs << "\tR" << tmp_rn->id << " [label=\"R" << tmp_rn->id << "\", shape=doublecircle];\n";
+    }
   }
 
   cdg_outs << "\n";
@@ -356,6 +368,9 @@ PDGAnalyzer::run(Function &F, FunctionAnalysisManager &FAM) {
 
   cdg_outs << "\n";
   for (RegionNode *tmp_rn : region_record) {
+    if (cdg_is_region_ENTRY(tmp_rn))
+      continue;
+
     std::list<CDGNode> tmp_rn_data = tmp_rn->data;
     for (CDGNode tmp_cdg_node : tmp_rn_data) {
       cdg_outs << "\t";
