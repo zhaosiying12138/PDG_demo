@@ -1,0 +1,38 @@
+digraph G {
+	edge[style=dashed];
+
+	L7 [label="L7", shape=circle];
+	L6 [label="L6", shape=circle];
+	L4 [label="L4", shape=circle];
+	L5 [label="L5", shape=circle];
+	L2 [label="L2", shape=circle];
+	L3 [label="L3", shape=circle];
+	L1 [label="L1", shape=circle];
+	ENTRY [label="ENTRY", shape=circle];
+
+	R1 [label="R1", shape=doublecircle];
+	R2 [label="R2", shape=doublecircle];
+	R3 [label="R3", shape=doublecircle];
+	R5 [label="R5", shape=doublecircle];
+	R4 [label="R4", shape=doublecircle];
+	R6 [label="R6", shape=doublecircle];
+	R7 [label="R7", shape=doublecircle];
+
+	R6 -> L2;
+	R1 -> L1;
+	R7 -> L3;
+	R3 -> L4;
+	R4 -> L5;
+	R1 -> L7;
+	R2 -> L6;
+
+	ENTRY -> R1 [label="T"];
+	R5 -> R2;
+	R6 -> R2;
+	L2 -> R3 [label="T"];
+	L3 -> R5 [label="T"];
+	L2 -> R4 [label="F"];
+	R5 -> R4;
+	L1 -> R6 [label="T"];
+	L1 -> R7 [label="F"];
+}

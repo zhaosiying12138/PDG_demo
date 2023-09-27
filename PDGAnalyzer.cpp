@@ -330,7 +330,7 @@ PDGAnalyzer::run(Function &F, FunctionAnalysisManager &FAM) {
 
 
   std::error_code ec;
-  llvm::raw_fd_ostream cdg_outs("../demo/zsy_test_cdg.dot", ec);
+  llvm::raw_fd_ostream cdg_outs("../demo/zsy_test_cdg_auto_generated.dot", ec);
   cdg_outs << "digraph G {\n";
   cdg_outs << "\tedge[style=dashed];\n";
 
@@ -345,6 +345,40 @@ PDGAnalyzer::run(Function &F, FunctionAnalysisManager &FAM) {
   }
 
   cdg_outs << "\n";
+  for (RegionNode *tmp_rn : region_record) {
+      cdg_outs << "\tR" << tmp_rn->id << " [label=\"R" << tmp_rn->id << "\", shape=doublecircle];\n";
+  }
+
+  cdg_outs << "\n";
+  for (auto it : map_bb_region) {
+    cdg_outs << "\tR" << it.second->id << " -> " << it.first->getName() << ";\n";
+  }
+
+  cdg_outs << "\n";
+  for (RegionNode *tmp_rn : region_record) {
+    std::list<CDGNode> tmp_rn_data = tmp_rn->data;
+    for (CDGNode tmp_cdg_node : tmp_rn_data) {
+      cdg_outs << "\t";
+      if (tmp_cdg_node.type) {
+        cdg_outs << "R" << tmp_cdg_node.RN->id;
+      } else {
+        cdg_outs << tmp_cdg_node.BB->getName();
+      }
+      cdg_outs << " -> R" << tmp_rn->id;
+      if (tmp_cdg_node.type) {
+        cdg_outs << ";\n";
+      } else {
+        cdg_outs << " [label=\"";
+        if (tmp_cdg_node.condition) {
+          cdg_outs << "T";
+        } else {
+          cdg_outs << "F";
+        }
+        cdg_outs << "\"];\n";
+      }
+    }
+  }
+
   cdg_outs << "}\n";
 
   return PA;
